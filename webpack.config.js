@@ -1,15 +1,17 @@
-const slsw = require("serverless-webpack");
 const nodeExternals = require("webpack-node-externals");
 
 module.exports = {
-  entry: slsw.lib.entries,
+  entry: ['babel-polyfill', "./handler.js"],
   target: "node",
+  output: {
+    filename: "bundle.js"
+  },
   // Generate sourcemaps for proper error messages
   devtool: 'source-map',
   // Since 'aws-sdk' is not compatible with webpack,
   // we exclude all node dependencies
   externals: [nodeExternals()],
-  mode: slsw.lib.webpack.isLocal ? "development" : "production",
+  mode: process.env.IS_DEV ? "development" : "production",
   optimization: {
     // We no not want to minimize our code.
     minimize: false

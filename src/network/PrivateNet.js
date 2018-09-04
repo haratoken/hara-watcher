@@ -8,6 +8,7 @@ export default class PrivateNet {
   }
 
   _listenNewBlockHeader = async () => {
+    console.log("listen to block header");
     this.subscriptionNewBlockHeader = privWeb3.eth
       .subscribe("newBlockHeaders", async (error, result) => {
         if (!error) {

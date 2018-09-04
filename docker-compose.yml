@@ -8,10 +8,21 @@ services:
     volumes:
       - ./ganache_priv:/var/task/ganache_priv
   dynamodb_local:
-    image: dynamodb:dev
+    image: hara:watcher
     command: bash -c "sls dynamodb start -p 8000 --migrate true --dbPath=/var/task/dynamodb_data"
     ports:
       - "8000:8000"
     volumes:
       - ./dynamodb_data:/var/task/dynamodb_data
+  hara_scan:
+    image: hara:watcher_main
+    environment:
+      - PRIV_NETWORK=http://ganache_priv:8545
+      - IS_DEV=true
+    depends_on:
+      - ganache_priv
+      - dynamodb_local
+    command: bash -c "tail -f /dev/null"
+    volumes:
+      - .:/var/task
   
