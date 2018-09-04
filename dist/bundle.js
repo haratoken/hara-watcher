@@ -111,11 +111,6 @@ module.exports = require("babel-polyfill");
 "use strict";
 
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports._watch = undefined;
-
 var _WatcherController = __webpack_require__(4);
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
@@ -128,11 +123,10 @@ var _watch = function () {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
-            console.log("aa");
-            _context.next = 3;
+            _context.next = 2;
             return (0, _WatcherController._BlockWatcher)();
 
-          case 3:
+          case 2:
           case "end":
             return _context.stop();
         }
@@ -145,7 +139,11 @@ var _watch = function () {
   };
 }();
 
-exports._watch = _watch;
+// export {
+//   _watch
+// }
+
+_watch();
 
 /***/ }),
 /* 4 */
@@ -534,16 +532,14 @@ var configDB = exports.configDB = function configDB() {
     accessKeyId: AWSaccesssKeyId,
     secretAccessKey: AWSsecretAccessKey,
     region: AWSregion
-  };
 
-  if (process.env.IS_DEV) {
-    config = _extends({}, config, {
-      endpoint: AWSendpoint,
-      credentials: false
-    });
-  }
+    // if(process.env.IS_DEV) {
+  };config = _extends({}, config, {
+    endpoint: AWSendpoint,
+    credentials: false
+    // }
 
-  console.log(config);
+  });console.log(config);
 
   return config;
 };

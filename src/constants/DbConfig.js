@@ -13,13 +13,13 @@ export const configDB = () => {
     region: AWSregion,
   }
 
-  if(process.env.IS_DEV) {
+  // if(process.env.IS_DEV) {
     config = {
       ...config,
       endpoint: AWSendpoint,
       credentials: false,
     }
-  }
+  // }
 
   console.log(config);
 

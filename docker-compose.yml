@@ -22,7 +22,7 @@ services:
     depends_on:
       - ganache_priv
       - dynamodb_local
-    command: bash -c "tail -f /dev/null"
+    command: bash -c "npm install && tail -f /dev/null"
     volumes:
       - .:/var/task
   
