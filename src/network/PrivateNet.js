@@ -11,8 +11,19 @@ export default class PrivateNet {
     this.subscriptionNewBlockHeader = privWeb3.eth
       .subscribe("newBlockHeaders", async (error, result) => {
         if (!error) {
-          const status = await new HaraBlock()._insertBlock(result, "mined");
-          return status;
+          const blockDetail = await this.web3.eth.getBlock(result.hash);
+
+          await new HaraBlock()._insertBlock(blockDetail, "mined");
+
+          const txHashs = blockDetail.transactions;
+
+          if (txHashs.length > 0) {
+            txHashs.map(async (txHash, key) => {
+              let txReceipt = await this.web3.eth.getTransactionReceipt(txHash);
+
+              await new HaraBlock()._insertTransaction(txReceipt);
+            });
+          }
         }
 
         console.error(error);

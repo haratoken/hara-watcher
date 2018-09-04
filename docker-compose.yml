@@ -7,4 +7,11 @@ services:
       - "8546:8546"
     volumes:
       - ./ganache_priv:/var/task/ganache_priv
+  dynamodb_local:
+    image: dynamodb:dev
+    command: bash -c "sls dynamodb start -p 8000 --migrate true --dbPath=/var/task/dynamodb_data"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./dynamodb_data:/var/task/dynamodb_data
   
