@@ -99,11 +99,11 @@ export default class HaraBlock {
         _item.timestamp = new Date().toISOString();
 
         if(_item.logs.length == 0) {
-          _item.transactionType = "send_ether"
+          _item.transactionType = "user_to_user"
         } else if(_item.logs.length == 1) {
           _item.transactionType = "contract_creation"
         } else {
-          _item.transactionType = "contract_function"
+          _item.transactionType = "user_to_contract"
         }
 
         _item.logs = JSON.stringify(_item.logs);
