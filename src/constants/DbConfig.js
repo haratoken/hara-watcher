@@ -1,8 +1,8 @@
 import AWS from "aws-sdk";
 import { DataMapper } from '@aws/dynamodb-data-mapper';
 
-const AWSaccesssKeyId = "not-important";
-const AWSsecretAccessKey = "not-important";
+const AWSaccesssKeyId = process.env.AWS_ACCESS_KEY_ID ? AWS_ACCESS_KEY_ID : "not-important";
+const AWSsecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY ? process.env.AWS_SECRET_ACCESS_KEY : "not-important";
 const AWSregion = process.env.REGION ? process.env.REGION : "local";
 const AWSendpoint = "http://dynamodb_local:8000";
 
@@ -13,15 +13,13 @@ export const configDB = () => {
     region: AWSregion,
   }
 
-  // if(process.env.IS_DEV) {
+  if(process.env.IS_DEV) {
     config = {
       ...config,
       endpoint: AWSendpoint,
       credentials: false,
     }
-  // }
-
-  console.log(config);
+  }
 
   return config;
 }

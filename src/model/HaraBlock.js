@@ -17,7 +17,7 @@ Object.defineProperties(_haraBlock.prototype, {
         keyType: "RANGE"
       },
       blockStatus: { type: "String" },
-      blockHash: { type: "String"},
+      blockHash: { type: "String" },
       parentHash: { type: "String" },
       sha3Uncles: { type: "String" },
       miner: { type: "String" },
@@ -27,7 +27,7 @@ Object.defineProperties(_haraBlock.prototype, {
       logsBloom: { type: "String" },
       difficulty: { type: "String" },
       number: { type: "Number" },
-      gasLimit: { type: "Number" }, 
+      gasLimit: { type: "Number" },
       gasUsed: { type: "Number" },
       nonce: { type: "String" },
       timestamp: { type: "String" },
@@ -43,7 +43,7 @@ Object.defineProperties(_haraBlock.prototype, {
       cumulativeGasUsed: { type: "Number" },
       contractAddress: { type: "String" },
       logs: { type: "String" },
-      status: { type: "String" },
+      status: { type: "String" }
     }
   }
 });
@@ -89,7 +89,7 @@ export default class HaraBlock {
     });
   };
 
-  _insertTransaction = (data) => {
+  _insertTransaction = data => {
     return new Promise((resolve, reject) => {
       if ("transactionHash" in data) {
         const db = new _haraBlock();
@@ -98,17 +98,19 @@ export default class HaraBlock {
         _item.hash = _item.transactionHash;
         _item.timestamp = new Date().toISOString();
 
-        if(_item.logs.length == 0) {
-          _item.transactionType = "user_to_user"
-        } else if(_item.logs.length == 1) {
-          _item.transactionType = "contract_creation"
+        if (_item.logs.length == 0) {
+          _item.transactionType = "user_to_user";
+        } else if (_item.logs.length == 1) {
+          _item.transactionType = "contract_creation";
         } else {
-          _item.transactionType = "user_to_contract"
+          _item.transactionType = "user_to_contract";
         }
 
         _item.logs = JSON.stringify(_item.logs);
         _item.status = _item.status ? "true" : "false";
-        _item.contractAddress = _item.contractAddress ? _item.contractAddress.toString() : "*";
+        _item.contractAddress = _item.contractAddress
+          ? _item.contractAddress.toString()
+          : "*";
         _item.number = _item.blockNumber;
 
         Mapper.put({ item: _item })
@@ -116,7 +118,10 @@ export default class HaraBlock {
             resolve({
               status: 1,
               data: _item,
-              message: "Item with transaction Hash " + _item.hash + " successfull saved"
+              message:
+                "Item with transaction Hash " +
+                _item.hash +
+                " successfull saved"
             });
           })
           .catch(err => {
@@ -124,7 +129,8 @@ export default class HaraBlock {
             resolve({
               status: 0,
               data: _item,
-              message: "Item with transaction Hash " + _item.hash + " failed saved"
+              message:
+                "Item with transaction Hash " + _item.hash + " failed saved"
             });
           });
       } else {
@@ -134,5 +140,56 @@ export default class HaraBlock {
         });
       }
     });
+  };
+
+  _insertPendingTransaction = txHash => {
+    return new Promise((resolve, reject) => {
+      let db = new _haraBlock();
+      db.type = "transactions";
+      db.hash = txHash;
+      db.status = "pending";
+
+      Mapper.put({ item: db })
+        .then(() => {
+          resolve({
+            status: 1,
+            data: db,
+            message: "Item with transaction Hash " + db.hash + " is Pending"
+          });
+        })
+        .catch(err => {
+          console.warn(err.message);
+          resolve({
+            status: 0,
+            data: db,
+            message:
+              "Item with transaction Hash " +
+              db.hash +
+              " is pending failed to saved"
+          });
+        });
+    });
+  };
+
+  _getTxData = async txHash => {
+    let db = new _haraBlock();
+    db.type = "transactions";
+    db.hash = txHash;
+
+    let result = await new Promise((resolve, reject) => {
+      Mapper.get({ item: db })
+        .then(val => {
+          resolve(val);
+        })
+        .catch(err => {
+          resolve(false);
+        });
+    });
+
+    if (result) {
+      return result;
+    }
+
+    return false;
   };
 }

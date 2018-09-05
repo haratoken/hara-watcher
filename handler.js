@@ -6,8 +6,4 @@ const _watch = async () => {
   await _BlockWatcher();
 };
 
-// export {
-//   _watch
-// }
-
 _watch();

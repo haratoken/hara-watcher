@@ -5,10 +5,12 @@ export default class PrivateNet {
   constructor() {
     this.web3 = privWeb3;
     this.subscriptionNewBlockHeader;
-  }
+    this.subscriptionPendingTransactions;
 
+    console.log("now listening to Private Watcher");
+  }
+  
   _listenNewBlockHeader = async () => {
-    console.log("listen to block header");
     this.subscriptionNewBlockHeader = privWeb3.eth
       .subscribe("newBlockHeaders", async (error, result) => {
         if (!error) {
@@ -32,5 +34,19 @@ export default class PrivateNet {
       .on("error", console.error);
   };
 
-  _listenPendingBlock = () => {};
+  _listenPendingBlock = () => {
+    this.subscriptionPendingTransactions = privWeb3.eth
+      .subscribe("pendingTransactions", async (error, result) => {
+        let txHash = result;
+        const modelHaraBlock = new HaraBlock();
+
+        let checkDB = await modelHaraBlock._getTxData(txHash);
+
+        if (checkDB === false) {
+          await modelHaraBlock._insertPendingTransaction(txHash);
+        }
+      })
+      .on("error", console.error);
+  };
+
 }

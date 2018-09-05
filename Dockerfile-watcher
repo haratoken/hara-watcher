@@ -1,5 +1,0 @@
-FROM node:8.11.0
-LABEL maintainer="Allandhino pattras <allandhino.pattras@hara.ag>"
-WORKDIR /var/task
-ADD . .
-RUN npm install

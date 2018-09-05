@@ -25,6 +25,9 @@ package-lock.json
 dynamodb_data
 ganache_main
 ganache_priv
-serverless.yml
 
 .dynamodb
+
+# jsdoc
+out
+dist
