@@ -53,6 +53,30 @@ export default class HaraBlock {
     this.tblName = TB_HARA_BLOCK;
   }
 
+  _insertLastBlockDetail = blockNumber => {
+    return new Promise((resolve, reject) => {
+      let db = new _haraBlock();
+      db.type = "last_block_number";
+      db.hash = "*";
+      db.number = blockNumber;
+
+      Mapper.put({ item: db })
+        .then(() => {
+          resolve({
+            status: 1,
+            data: db,
+          });
+        })
+        .catch(err => {
+          console.warn(err.message);
+          resolve({
+            status: 0,
+            data: db,
+          });
+        });
+    });
+  };
+
   _insertBlock = (data, blockStatus = "pending") => {
     return new Promise((resolve, reject) => {
       if ("hash" in data) {
@@ -94,7 +118,7 @@ export default class HaraBlock {
       if ("transactionHash" in data) {
         const db = new _haraBlock();
         let _item = Object.assign(db, data);
-        _item.type = "transactions";
+        _item.type = "transaction";
         _item.hash = _item.transactionHash;
         _item.timestamp = new Date().toISOString();
 

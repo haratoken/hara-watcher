@@ -15,7 +15,9 @@ export default class PrivateNet {
       .subscribe("newBlockHeaders", async (error, result) => {
         if (!error) {
           const blockDetail = await this.web3.eth.getBlock(result.hash);
+          const blockNumber = blockDetail.number;
 
+          await new HaraBlock()._insertLastBlockDetail(blockNumber);
           await new HaraBlock()._insertBlock(blockDetail, "mined");
 
           const txHashs = blockDetail.transactions;
