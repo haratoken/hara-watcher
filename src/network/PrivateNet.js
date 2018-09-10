@@ -29,9 +29,10 @@ export default class PrivateNet {
               await new HaraBlock()._insertTransaction(txReceipt);
             });
           }
+        } else {
+          console.error(error);
         }
 
-        console.error(error);
       })
       .on("error", console.error);
   };
