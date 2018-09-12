@@ -16,6 +16,8 @@ export default class PrivateNet {
         if (!error) {
           const blockDetail = await this.web3.eth.getBlock(result.hash);
           const blockNumber = blockDetail.number;
+          const gasLimit    = blockDetail.gasLimit;
+          const timeStamp   = blockDetail.timestamp;
 
           await new HaraBlock()._insertLastBlockDetail(blockNumber);
           await new HaraBlock()._insertBlock(blockDetail, "mined");
@@ -25,8 +27,9 @@ export default class PrivateNet {
           if (txHashs.length > 0) {
             txHashs.map(async (txHash, key) => {
               let txReceipt = await this.web3.eth.getTransactionReceipt(txHash);
+              let txDetail  = await this.web3.eth.getTransaction(txHash);
 
-              await new HaraBlock()._insertTransaction(txReceipt);
+              await new HaraBlock()._insertTransaction(txReceipt, txDetail, gasLimit, timeStamp);
             });
           }
         } else {

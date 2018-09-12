@@ -29,6 +29,8 @@ Object.defineProperties(_haraBlock.prototype, {
       number: { type: "Number" },
       gasLimit: { type: "Number" },
       gasUsed: { type: "Number" },
+      gasPrice: { type: "Number" },
+      gas: { type: "Number" },
       nonce: { type: "String" },
       timestamp: { type: "String" },
       extraData: { type: "String" },
@@ -43,7 +45,11 @@ Object.defineProperties(_haraBlock.prototype, {
       cumulativeGasUsed: { type: "Number" },
       contractAddress: { type: "String" },
       logs: { type: "String" },
-      status: { type: "String" }
+      status: { type: "String" },
+      from: { type: "String" },
+      to: { type: "String" },
+      value: { type: "Number" },
+      input: { type: "String" }
     }
   }
 });
@@ -113,15 +119,20 @@ export default class HaraBlock {
     });
   };
 
-  _insertTransaction = data => {
+  _insertTransaction = (txReceipt, txDetail, gasLimit, timeStamp) => {
     return new Promise((resolve, reject) => {
-      if ("transactionHash" in data) {
+      if ("transactionHash" in txReceipt) {
         const db = new _haraBlock();
-        let _item = Object.assign(db, data);
+        let _item = Object.assign(db, txReceipt);
         _item.type = "transaction";
         _item.hash = _item.transactionHash;
-        _item.timestamp = new Date().toISOString();
-
+        
+        // now join txDetail
+        _item = Object.assign(_item, txDetail);
+        _item.gasPrice = parseInt(_item.gasPrice);
+        _item.value = parseInt(_item.value);
+        _item.gasLimit = parseInt(gasLimit);
+        
         if (_item.logs.length == 0) {
           _item.transactionType = "user_to_user";
         } else if (_item.logs.length == 1) {
@@ -136,6 +147,9 @@ export default class HaraBlock {
           ? _item.contractAddress.toString()
           : "*";
         _item.number = _item.blockNumber;
+        _item.timestamp = new Date(timeStamp * 1000).toISOString();
+
+        // console.log("item", _item);
 
         Mapper.put({ item: _item })
           .then(() => {
@@ -169,7 +183,7 @@ export default class HaraBlock {
   _insertPendingTransaction = txHash => {
     return new Promise((resolve, reject) => {
       let db = new _haraBlock();
-      db.type = "transactions";
+      db.type = "transaction";
       db.hash = txHash;
       db.status = "pending";
 
@@ -197,7 +211,7 @@ export default class HaraBlock {
 
   _getTxData = async txHash => {
     let db = new _haraBlock();
-    db.type = "transactions";
+    db.type = "transaction";
     db.hash = txHash;
 
     let result = await new Promise((resolve, reject) => {
