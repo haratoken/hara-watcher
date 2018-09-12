@@ -70,14 +70,14 @@ export default class HaraBlock {
         .then(() => {
           resolve({
             status: 1,
-            data: db,
+            data: db
           });
         })
         .catch(err => {
           console.warn(err.message);
           resolve({
             status: 0,
-            data: db,
+            data: db
           });
         });
     });
@@ -122,55 +122,60 @@ export default class HaraBlock {
   _insertTransaction = (txReceipt, txDetail, gasLimit, timeStamp) => {
     return new Promise((resolve, reject) => {
       if ("transactionHash" in txReceipt) {
-        const db = new _haraBlock();
-        let _item = Object.assign(db, txReceipt);
-        _item.type = "transaction";
-        _item.hash = _item.transactionHash;
-        
-        // now join txDetail
-        _item = Object.assign(_item, txDetail);
-        _item.gasPrice = parseInt(_item.gasPrice);
-        _item.value = parseInt(_item.value);
-        _item.gasLimit = parseInt(gasLimit);
-        
-        if (_item.logs.length == 0) {
-          _item.transactionType = "user_to_user";
-        } else if (_item.logs.length == 1) {
-          _item.transactionType = "contract_creation";
-        } else {
-          _item.transactionType = "user_to_contract";
+        try {
+          const db = new _haraBlock();
+          let _item = Object.assign(db, txReceipt);
+          _item.type = "transaction";
+          _item.hash = _item.transactionHash;
+
+          // now join txDetail
+          _item = Object.assign(_item, txDetail);
+          _item.gasPrice = parseInt(_item.gasPrice);
+          _item.value = parseInt(_item.value);
+          _item.gasLimit = parseInt(gasLimit);
+
+          if (_item.logs.length == 0) {
+            _item.transactionType = "user_to_user";
+          } else if (_item.logs.length == 1) {
+            _item.transactionType = "contract_creation";
+          } else {
+            _item.transactionType = "user_to_contract";
+          }
+
+          _item.to = _item.to ? _item.to : "false";
+          _item.logs = JSON.stringify(_item.logs);
+          _item.status = _item.status ? "true" : "false";
+          _item.contractAddress = _item.contractAddress
+            ? _item.contractAddress
+            : "*";
+          _item.number = _item.blockNumber;
+          _item.timestamp = new Date(timeStamp * 1000).toISOString();
+
+          console.log(_item);
+
+          Mapper.put({ item: _item })
+            .then(() => {
+              resolve({
+                status: 1,
+                data: _item,
+                message:
+                  "Item with transaction Hash " +
+                  _item.hash +
+                  " successfull saved"
+              });
+            })
+            .catch(err => {
+              console.warn(err.message);
+              resolve({
+                status: 0,
+                data: _item,
+                message:
+                  "Item with transaction Hash " + _item.hash + " failed saved"
+              });
+            });
+        } catch (error) {
+          console.error(error);
         }
-
-        _item.logs = JSON.stringify(_item.logs);
-        _item.status = _item.status ? "true" : "false";
-        _item.contractAddress = _item.contractAddress
-          ? _item.contractAddress.toString()
-          : "*";
-        _item.number = _item.blockNumber;
-        _item.timestamp = new Date(timeStamp * 1000).toISOString();
-
-        // console.log("item", _item);
-
-        Mapper.put({ item: _item })
-          .then(() => {
-            resolve({
-              status: 1,
-              data: _item,
-              message:
-                "Item with transaction Hash " +
-                _item.hash +
-                " successfull saved"
-            });
-          })
-          .catch(err => {
-            console.warn(err.message);
-            resolve({
-              status: 0,
-              data: _item,
-              message:
-                "Item with transaction Hash " + _item.hash + " failed saved"
-            });
-          });
       } else {
         resolve({
           status: 0,
