@@ -31,3 +31,4 @@ ganache_priv
 # jsdoc
 out
 dist
+*.DS_Store
