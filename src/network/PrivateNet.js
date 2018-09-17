@@ -6,8 +6,6 @@ export default class PrivateNet {
     this.web3 = privWeb3;
     this.subscriptionNewBlockHeader;
     this.subscriptionPendingTransactions;
-
-    console.log("now listening to Private Watcher");
   }
   
   _listenNewBlockHeader = async () => {
