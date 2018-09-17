@@ -3,11 +3,11 @@ services:
   hara_watcher:
     image: hara:watcher
     environment:
-      - AWS_ACCESS_KEY_ID={AWS_ACCESS_KEY_ID}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - IS_DEV=false
       - PRIV_NETWORK=${PRIV_NETWORK}
-      - REGION={REGION}
-      - TB_HARA_BLOCK={TB_HARA_BLOCK}
+      - REGION=${REGION}
+      - TB_HARA_BLOCK=${TB_HARA_BLOCK}
     command: bash -c "npm start && tail -f /dev/null"
   
