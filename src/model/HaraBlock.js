@@ -44,10 +44,12 @@ Object.defineProperties(_haraBlock.prototype, {
       transactionType: { type: "String" },
       cumulativeGasUsed: { type: "Number" },
       contractAddress: { type: "String" },
+      address: { type: "String" },
       logs: { type: "String" },
       status: { type: "String" },
       from: { type: "String" },
       to: { type: "String" },
+      flow: {type: "String"},
       value: { type: "Number" },
       input: { type: "String" }
     }
@@ -65,7 +67,7 @@ export default class HaraBlock {
       db.type = "last_block_number";
       db.hash = "*";
       db.number = blockNumber;
-
+      0xD51Cef892A6F599b4FFf13D233E5abB99dAd52Bd
       Mapper.put({ item: db })
         .then(() => {
           resolve({
@@ -127,12 +129,20 @@ export default class HaraBlock {
           let _item = Object.assign(db, txReceipt);
           _item.type = "transaction";
           _item.hash = _item.transactionHash;
+          
+          let address = typeof _item.logs[0].address !== "undefined" ?  _item.logs[0].address : "";
 
           // now join txDetail
           _item = Object.assign(_item, txDetail);
           _item.gasPrice = parseInt(_item.gasPrice);
           _item.value = parseInt(_item.value);
           _item.gasLimit = parseInt(gasLimit);
+          if(_item.to == address){
+            _item.flow = "in";
+          }else{
+            _item.flow = "out";
+          }
+          
 
           if (_item.logs.length == 0) {
             _item.transactionType = "user_to_user";
@@ -151,10 +161,9 @@ export default class HaraBlock {
           _item.number = _item.blockNumber;
           _item.timestamp = new Date(timeStamp * 1000).toISOString();
 
-          console.log(_item);
-
           Mapper.put({ item: _item })
             .then(() => {
+              console.log("success hash" + _item.hash);
               resolve({
                 status: 1,
                 data: _item,
