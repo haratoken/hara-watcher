@@ -28,7 +28,10 @@ export default class PrivateNet {
             txHashs.map(async (txHash, key) => {
               let txReceipt = await this.web3.eth.getTransactionReceipt(txHash);
               let txDetail  = await this.web3.eth.getTransaction(txHash);
-
+              console.log("txReceipt");
+              console.log(txReceipt);
+              console.log("txDetail");
+              console.log(txDetail);
               await new HaraBlock()._insertTransaction(txReceipt, txDetail, gasLimit, timeStamp);
             });
           }
