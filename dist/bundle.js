@@ -81,37 +81,22 @@
 /******/
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
-/***/ (function(module, exports) {
+/******/ ({
 
-module.exports = require("@aws/dynamodb-data-mapper");
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-__webpack_require__(2);
-module.exports = __webpack_require__(3);
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports) {
-
-module.exports = require("babel-polyfill");
-
-/***/ }),
-/* 3 */
+/***/ "./handler.js":
+/*!********************!*\
+  !*** ./handler.js ***!
+  \********************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
-var _WatcherController = __webpack_require__(4);
+var _WatcherController = __webpack_require__(/*! ./src/WatcherController */ "./src/WatcherController.js");
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
@@ -123,10 +108,11 @@ var _watch = function () {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
-            _context.next = 2;
+            console.log("running watch");
+            _context.next = 3;
             return (0, _WatcherController._BlockWatcher)();
 
-          case 2:
+          case 3:
           case "end":
             return _context.stop();
         }
@@ -139,14 +125,15 @@ var _watch = function () {
   };
 }();
 
-// export {
-//   _watch
-// }
-
 _watch();
 
 /***/ }),
-/* 4 */
+
+/***/ "./src/WatcherController.js":
+/*!**********************************!*\
+  !*** ./src/WatcherController.js ***!
+  \**********************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -157,7 +144,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports._BlockWatcher = undefined;
 
-var _PrivateNet = __webpack_require__(5);
+var _PrivateNet = __webpack_require__(/*! ./network/PrivateNet */ "./src/network/PrivateNet.js");
 
 var _PrivateNet2 = _interopRequireDefault(_PrivateNet);
 
@@ -180,9 +167,9 @@ var _BlockWatcher = exports._BlockWatcher = function () {
 
 
             privNet._listenNewBlockHeader();
-            privNet._listenPendingBlock();
+            // privNet._listenPendingBlock();
 
-          case 5:
+          case 4:
           case "end":
             return _context.stop();
         }
@@ -196,7 +183,12 @@ var _BlockWatcher = exports._BlockWatcher = function () {
 }();
 
 /***/ }),
-/* 5 */
+
+/***/ "./src/constants/DbConfig.js":
+/*!***********************************!*\
+  !*** ./src/constants/DbConfig.js ***!
+  \***********************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -205,119 +197,60 @@ var _BlockWatcher = exports._BlockWatcher = function () {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.TB_HARA_BLOCK = exports.Mapper = exports.InitDB = exports.configDB = undefined;
 
-var _Web3Config = __webpack_require__(6);
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
-var _HaraBlock = __webpack_require__(8);
+var _awsSdk = __webpack_require__(/*! aws-sdk */ "aws-sdk");
 
-var _HaraBlock2 = _interopRequireDefault(_HaraBlock);
+var _awsSdk2 = _interopRequireDefault(_awsSdk);
+
+var _dynamodbDataMapper = __webpack_require__(/*! @aws/dynamodb-data-mapper */ "@aws/dynamodb-data-mapper");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+var AWSaccesssKeyId = process.env.AWS_ACCESS_KEY_ID ? process.env.AWS_ACCESS_KEY_ID : "not-important";
+var AWSsecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY ? process.env.AWS_SECRET_ACCESS_KEY : "not-important";
+var AWSregion = process.env.REGION ? process.env.REGION : "local";
+var AWSendpoint = process.env.DB_ENDPOINT !== 'undefined' && process.env.DB_ENDPOINT ? process.env.DB_ENDPOINT : "http://192.168.99.100:8000";
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var configDB = exports.configDB = function configDB() {
+  var config = {
+    accessKeyId: AWSaccesssKeyId,
+    secretAccessKey: AWSsecretAccessKey,
+    region: AWSregion
+  };
 
-var PrivateNet = function PrivateNet() {
-  var _this = this;
+  if (process.env.IS_DEV == "true" || typeof process.env.IS_DEV === "undefined") {
+    config = _extends({}, config, {
+      endpoint: AWSendpoint,
+      credentials: false
+    });
+  }
 
-  _classCallCheck(this, PrivateNet);
+  console.log(config);
 
-  this._listenNewBlockHeader = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
-    return regeneratorRuntime.wrap(function _callee3$(_context3) {
-      while (1) {
-        switch (_context3.prev = _context3.next) {
-          case 0:
-            console.log("listen to block header");
-            _this.subscriptionNewBlockHeader = _Web3Config.privWeb3.eth.subscribe("newBlockHeaders", function () {
-              var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(error, result) {
-                var blockDetail, txHashs;
-                return regeneratorRuntime.wrap(function _callee2$(_context2) {
-                  while (1) {
-                    switch (_context2.prev = _context2.next) {
-                      case 0:
-                        if (error) {
-                          _context2.next = 8;
-                          break;
-                        }
-
-                        _context2.next = 3;
-                        return _this.web3.eth.getBlock(result.hash);
-
-                      case 3:
-                        blockDetail = _context2.sent;
-                        _context2.next = 6;
-                        return new _HaraBlock2.default()._insertBlock(blockDetail, "mined");
-
-                      case 6:
-                        txHashs = blockDetail.transactions;
-
-
-                        if (txHashs.length > 0) {
-                          txHashs.map(function () {
-                            var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(txHash, key) {
-                              var txReceipt;
-                              return regeneratorRuntime.wrap(function _callee$(_context) {
-                                while (1) {
-                                  switch (_context.prev = _context.next) {
-                                    case 0:
-                                      _context.next = 2;
-                                      return _this.web3.eth.getTransactionReceipt(txHash);
-
-                                    case 2:
-                                      txReceipt = _context.sent;
-                                      _context.next = 5;
-                                      return new _HaraBlock2.default()._insertTransaction(txReceipt);
-
-                                    case 5:
-                                    case "end":
-                                      return _context.stop();
-                                  }
-                                }
-                              }, _callee, _this);
-                            }));
-
-                            return function (_x3, _x4) {
-                              return _ref3.apply(this, arguments);
-                            };
-                          }());
-                        }
-
-                      case 8:
-
-                        console.error(error);
-
-                      case 9:
-                      case "end":
-                        return _context2.stop();
-                    }
-                  }
-                }, _callee2, _this);
-              }));
-
-              return function (_x, _x2) {
-                return _ref2.apply(this, arguments);
-              };
-            }()).on("error", console.error);
-
-          case 2:
-          case "end":
-            return _context3.stop();
-        }
-      }
-    }, _callee3, _this);
-  }));
-
-  this._listenPendingBlock = function () {};
-
-  this.web3 = _Web3Config.privWeb3;
-  this.subscriptionNewBlockHeader;
+  return config;
 };
 
-exports.default = PrivateNet;
+var InitDB = exports.InitDB = function InitDB() {
+  _awsSdk2.default.config.update(configDB());
+
+  return new _awsSdk2.default.DynamoDB.DocumentClient();
+};
+
+var client = new _awsSdk2.default.DynamoDB(configDB());
+var Mapper = exports.Mapper = new _dynamodbDataMapper.DataMapper({ client: client });
+
+var TB_HARA_BLOCK = exports.TB_HARA_BLOCK = process.env.TB_HARA_BLOCK ? process.env.TB_HARA_BLOCK : "hara_block_dev";
 
 /***/ }),
-/* 6 */
+
+/***/ "./src/constants/Web3Config.js":
+/*!*************************************!*\
+  !*** ./src/constants/Web3Config.js ***!
+  \*************************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -328,23 +261,22 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.privWeb3 = exports.privProvider = undefined;
 
-var _web = __webpack_require__(7);
+var _web = __webpack_require__(/*! web3 */ "web3");
 
 var _web2 = _interopRequireDefault(_web);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var privProvider = exports.privProvider = process.env.PRIV_NETWORK ? process.env.PRIV_NETWORK : "ws://ganache_priv:8546";
+var privProvider = exports.privProvider = process.env.PRIV_NETWORK ? process.env.PRIV_NETWORK : "ws://localhost:8546";
 var privWeb3 = exports.privWeb3 = new _web2.default(new _web2.default.providers.WebsocketProvider(privProvider));
 
 /***/ }),
-/* 7 */
-/***/ (function(module, exports) {
 
-module.exports = require("web3");
-
-/***/ }),
-/* 8 */
+/***/ "./src/model/HaraBlock.js":
+/*!********************************!*\
+  !*** ./src/model/HaraBlock.js ***!
+  \********************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -356,9 +288,11 @@ Object.defineProperty(exports, "__esModule", {
 
 var _Object$definePropert;
 
-var _DbConfig = __webpack_require__(9);
+var _DbConfig = __webpack_require__(/*! ../constants/DbConfig */ "./src/constants/DbConfig.js");
 
-var _dynamodbDataMapper = __webpack_require__(0);
+var _dynamodbDataMapper = __webpack_require__(/*! @aws/dynamodb-data-mapper */ "@aws/dynamodb-data-mapper");
+
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -393,6 +327,8 @@ Object.defineProperties(_haraBlock.prototype, (_Object$definePropert = {}, _defi
     number: { type: "Number" },
     gasLimit: { type: "Number" },
     gasUsed: { type: "Number" },
+    gasPrice: { type: "Number" },
+    gas: { type: "Number" },
     nonce: { type: "String" },
     timestamp: { type: "String" },
     extraData: { type: "String" },
@@ -406,13 +342,43 @@ Object.defineProperties(_haraBlock.prototype, (_Object$definePropert = {}, _defi
     transactionType: { type: "String" },
     cumulativeGasUsed: { type: "Number" },
     contractAddress: { type: "String" },
+    address: { type: "String" },
     logs: { type: "String" },
-    status: { type: "String" }
+    status: { type: "String" },
+    from: { type: "String" },
+    to: { type: "String" },
+    flow: { type: "String" },
+    value: { type: "Number" },
+    input: { type: "String" }
   }
 }), _Object$definePropert));
 
 var HaraBlock = function HaraBlock() {
+  var _this = this;
+
   _classCallCheck(this, HaraBlock);
+
+  this._insertLastBlockDetail = function (blockNumber) {
+    return new Promise(function (resolve, reject) {
+      var db = new _haraBlock();
+      db.type = "last_block_number";
+      db.hash = "*";
+      db.number = blockNumber;
+      0xD51Cef892A6F599b4FFf13D233E5abB99dAd52Bd;
+      _DbConfig.Mapper.put({ item: db }).then(function () {
+        resolve({
+          status: 1,
+          data: db
+        });
+      }).catch(function (err) {
+        console.warn(err.message);
+        resolve({
+          status: 0,
+          data: db
+        });
+      });
+    });
+  };
 
   this._insertBlock = function (data) {
     var blockStatus = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "pending";
@@ -450,42 +416,61 @@ var HaraBlock = function HaraBlock() {
     });
   };
 
-  this._insertTransaction = function (data) {
+  this._insertTransaction = function (txReceipt, txDetail, gasLimit, timeStamp) {
     return new Promise(function (resolve, reject) {
-      if ("transactionHash" in data) {
-        var db = new _haraBlock();
-        var _item = Object.assign(db, data);
-        _item.type = "transactions";
-        _item.hash = _item.transactionHash;
-        _item.timestamp = new Date().toISOString();
+      if ("transactionHash" in txReceipt) {
+        try {
+          var db = new _haraBlock();
+          var _item = Object.assign(db, txReceipt);
+          _item.type = "transaction";
+          _item.hash = _item.transactionHash;
 
-        if (_item.logs.length == 0) {
-          _item.transactionType = "user_to_user";
-        } else if (_item.logs.length == 1) {
-          _item.transactionType = "contract_creation";
-        } else {
-          _item.transactionType = "user_to_contract";
+          var address = typeof _item.logs[0].address !== "undefined" ? _item.logs[0].address : "";
+
+          // now join txDetail
+          _item = Object.assign(_item, txDetail);
+          _item.gasPrice = parseInt(_item.gasPrice);
+          _item.value = parseInt(_item.value);
+          _item.gasLimit = parseInt(gasLimit);
+          if (_item.to == address) {
+            _item.flow = "in";
+          } else {
+            _item.flow = "out";
+          }
+
+          if (_item.logs.length == 0) {
+            _item.transactionType = "user_to_user";
+          } else if (_item.logs.length == 1) {
+            _item.transactionType = "contract_creation";
+          } else {
+            _item.transactionType = "user_to_contract";
+          }
+
+          _item.to = _item.to ? _item.to : "false";
+          _item.logs = JSON.stringify(_item.logs);
+          _item.status = _item.status ? "true" : "false";
+          _item.contractAddress = _item.contractAddress ? _item.contractAddress : "*";
+          _item.number = _item.blockNumber;
+          _item.timestamp = new Date(timeStamp * 1000).toISOString();
+
+          _DbConfig.Mapper.put({ item: _item }).then(function () {
+            console.log("success hash" + _item.hash);
+            resolve({
+              status: 1,
+              data: _item,
+              message: "Item with transaction Hash " + _item.hash + " successfull saved"
+            });
+          }).catch(function (err) {
+            console.warn(err.message);
+            resolve({
+              status: 0,
+              data: _item,
+              message: "Item with transaction Hash " + _item.hash + " failed saved"
+            });
+          });
+        } catch (error) {
+          console.error(error);
         }
-
-        _item.logs = JSON.stringify(_item.logs);
-        _item.status = _item.status ? "true" : "false";
-        _item.contractAddress = _item.contractAddress ? _item.contractAddress.toString() : "*";
-        _item.number = _item.blockNumber;
-
-        _DbConfig.Mapper.put({ item: _item }).then(function () {
-          resolve({
-            status: 1,
-            data: _item,
-            message: "Item with transaction Hash " + _item.hash + " successfull saved"
-          });
-        }).catch(function (err) {
-          console.warn(err.message);
-          resolve({
-            status: 0,
-            data: _item,
-            message: "Item with transaction Hash " + _item.hash + " failed saved"
-          });
-        });
       } else {
         resolve({
           status: 0,
@@ -495,13 +480,89 @@ var HaraBlock = function HaraBlock() {
     });
   };
 
+  this._insertPendingTransaction = function (txHash) {
+    return new Promise(function (resolve, reject) {
+      var db = new _haraBlock();
+      db.type = "transaction";
+      db.hash = txHash;
+      db.status = "pending";
+
+      _DbConfig.Mapper.put({ item: db }).then(function () {
+        resolve({
+          status: 1,
+          data: db,
+          message: "Item with transaction Hash " + db.hash + " is Pending"
+        });
+      }).catch(function (err) {
+        console.warn(err.message);
+        resolve({
+          status: 0,
+          data: db,
+          message: "Item with transaction Hash " + db.hash + " is pending failed to saved"
+        });
+      });
+    });
+  };
+
+  this._getTxData = function () {
+    var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(txHash) {
+      var db, result;
+      return regeneratorRuntime.wrap(function _callee$(_context) {
+        while (1) {
+          switch (_context.prev = _context.next) {
+            case 0:
+              db = new _haraBlock();
+
+              db.type = "transaction";
+              db.hash = txHash;
+
+              _context.next = 5;
+              return new Promise(function (resolve, reject) {
+                _DbConfig.Mapper.get({ item: db }).then(function (val) {
+                  resolve(val);
+                }).catch(function (err) {
+                  resolve(false);
+                });
+              });
+
+            case 5:
+              result = _context.sent;
+
+              if (!result) {
+                _context.next = 8;
+                break;
+              }
+
+              return _context.abrupt("return", result);
+
+            case 8:
+              return _context.abrupt("return", false);
+
+            case 9:
+            case "end":
+              return _context.stop();
+          }
+        }
+      }, _callee, _this);
+    }));
+
+    return function (_x2) {
+      return _ref.apply(this, arguments);
+    };
+  }();
+
   this.tblName = _DbConfig.TB_HARA_BLOCK;
 };
 
 exports.default = HaraBlock;
 
 /***/ }),
-/* 9 */
+
+/***/ "./src/network/PrivateNet.js":
+/*!***********************************!*\
+  !*** ./src/network/PrivateNet.js ***!
+  \***********************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -510,57 +571,229 @@ exports.default = HaraBlock;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.TB_HARA_BLOCK = exports.Mapper = exports.InitDB = exports.configDB = undefined;
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+var _Web3Config = __webpack_require__(/*! ../constants/Web3Config */ "./src/constants/Web3Config.js");
 
-var _awsSdk = __webpack_require__(10);
+var _HaraBlock = __webpack_require__(/*! ../model/HaraBlock */ "./src/model/HaraBlock.js");
 
-var _awsSdk2 = _interopRequireDefault(_awsSdk);
-
-var _dynamodbDataMapper = __webpack_require__(0);
+var _HaraBlock2 = _interopRequireDefault(_HaraBlock);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var AWSaccesssKeyId = "not-important";
-var AWSsecretAccessKey = "not-important";
-var AWSregion = process.env.REGION ? process.env.REGION : "local";
-var AWSendpoint = "http://dynamodb_local:8000";
+function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
 
-var configDB = exports.configDB = function configDB() {
-  var config = {
-    accessKeyId: AWSaccesssKeyId,
-    secretAccessKey: AWSsecretAccessKey,
-    region: AWSregion
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-    // if(process.env.IS_DEV) {
-  };config = _extends({}, config, {
-    endpoint: AWSendpoint,
-    credentials: false
-    // }
+var PrivateNet = function PrivateNet() {
+  var _this = this;
 
-  });console.log(config);
+  _classCallCheck(this, PrivateNet);
 
-  return config;
+  this._listenNewBlockHeader = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {
+    return regeneratorRuntime.wrap(function _callee3$(_context3) {
+      while (1) {
+        switch (_context3.prev = _context3.next) {
+          case 0:
+            _this.subscriptionNewBlockHeader = _Web3Config.privWeb3.eth.subscribe("newBlockHeaders", function () {
+              var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(error, result) {
+                var blockDetail, blockNumber, gasLimit, timeStamp, txHashs;
+                return regeneratorRuntime.wrap(function _callee2$(_context2) {
+                  while (1) {
+                    switch (_context2.prev = _context2.next) {
+                      case 0:
+                        if (error) {
+                          _context2.next = 15;
+                          break;
+                        }
+
+                        _context2.next = 3;
+                        return _this.web3.eth.getBlock(result.hash);
+
+                      case 3:
+                        blockDetail = _context2.sent;
+                        blockNumber = blockDetail.number;
+                        gasLimit = blockDetail.gasLimit;
+                        timeStamp = blockDetail.timestamp;
+                        _context2.next = 9;
+                        return new _HaraBlock2.default()._insertLastBlockDetail(blockNumber);
+
+                      case 9:
+                        _context2.next = 11;
+                        return new _HaraBlock2.default()._insertBlock(blockDetail, "mined");
+
+                      case 11:
+                        txHashs = blockDetail.transactions;
+
+
+                        if (txHashs.length > 0) {
+                          txHashs.map(function () {
+                            var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(txHash, key) {
+                              var txReceipt, txDetail;
+                              return regeneratorRuntime.wrap(function _callee$(_context) {
+                                while (1) {
+                                  switch (_context.prev = _context.next) {
+                                    case 0:
+                                      _context.next = 2;
+                                      return _this.web3.eth.getTransactionReceipt(txHash);
+
+                                    case 2:
+                                      txReceipt = _context.sent;
+                                      _context.next = 5;
+                                      return _this.web3.eth.getTransaction(txHash);
+
+                                    case 5:
+                                      txDetail = _context.sent;
+
+                                      console.log("txReceipt");
+                                      console.log(txReceipt);
+                                      console.log("txDetail");
+                                      console.log(txDetail);
+                                      _context.next = 12;
+                                      return new _HaraBlock2.default()._insertTransaction(txReceipt, txDetail, gasLimit, timeStamp);
+
+                                    case 12:
+                                    case "end":
+                                      return _context.stop();
+                                  }
+                                }
+                              }, _callee, _this);
+                            }));
+
+                            return function (_x3, _x4) {
+                              return _ref3.apply(this, arguments);
+                            };
+                          }());
+                        }
+                        _context2.next = 16;
+                        break;
+
+                      case 15:
+                        console.error(error);
+
+                      case 16:
+                      case "end":
+                        return _context2.stop();
+                    }
+                  }
+                }, _callee2, _this);
+              }));
+
+              return function (_x, _x2) {
+                return _ref2.apply(this, arguments);
+              };
+            }()).on("error", console.error);
+
+          case 1:
+          case "end":
+            return _context3.stop();
+        }
+      }
+    }, _callee3, _this);
+  }));
+
+  this._listenPendingBlock = function () {
+    _this.subscriptionPendingTransactions = _Web3Config.privWeb3.eth.subscribe("pendingTransactions", function () {
+      var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(error, result) {
+        var txHash, modelHaraBlock, checkDB;
+        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                txHash = result;
+                modelHaraBlock = new _HaraBlock2.default();
+                _context4.next = 4;
+                return modelHaraBlock._getTxData(txHash);
+
+              case 4:
+                checkDB = _context4.sent;
+
+                if (!(checkDB === false)) {
+                  _context4.next = 8;
+                  break;
+                }
+
+                _context4.next = 8;
+                return modelHaraBlock._insertPendingTransaction(txHash);
+
+              case 8:
+              case "end":
+                return _context4.stop();
+            }
+          }
+        }, _callee4, _this);
+      }));
+
+      return function (_x5, _x6) {
+        return _ref4.apply(this, arguments);
+      };
+    }()).on("error", console.error);
+  };
+
+  this.web3 = _Web3Config.privWeb3;
+  this.subscriptionNewBlockHeader;
+  this.subscriptionPendingTransactions;
 };
 
-var InitDB = exports.InitDB = function InitDB() {
-  _awsSdk2.default.config.update(configDB());
-
-  return new _awsSdk2.default.DynamoDB.DocumentClient();
-};
-
-var client = new _awsSdk2.default.DynamoDB(configDB());
-var Mapper = exports.Mapper = new _dynamodbDataMapper.DataMapper({ client: client });
-
-var TB_HARA_BLOCK = exports.TB_HARA_BLOCK = process.env.TB_HARA_BLOCK ? process.env.TB_HARA_BLOCK : "hara_block_dev";
+exports.default = PrivateNet;
 
 /***/ }),
-/* 10 */
+
+/***/ 0:
+/*!*****************************************!*\
+  !*** multi babel-polyfill ./handler.js ***!
+  \*****************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(/*! babel-polyfill */"babel-polyfill");
+module.exports = __webpack_require__(/*! ./handler.js */"./handler.js");
+
+
+/***/ }),
+
+/***/ "@aws/dynamodb-data-mapper":
+/*!********************************************!*\
+  !*** external "@aws/dynamodb-data-mapper" ***!
+  \********************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("@aws/dynamodb-data-mapper");
+
+/***/ }),
+
+/***/ "aws-sdk":
+/*!**************************!*\
+  !*** external "aws-sdk" ***!
+  \**************************/
+/*! no static exports found */
 /***/ (function(module, exports) {
 
 module.exports = require("aws-sdk");
 
+/***/ }),
+
+/***/ "babel-polyfill":
+/*!*********************************!*\
+  !*** external "babel-polyfill" ***!
+  \*********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("babel-polyfill");
+
+/***/ }),
+
+/***/ "web3":
+/*!***********************!*\
+  !*** external "web3" ***!
+  \***********************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = require("web3");
+
 /***/ })
-/******/ ]);
+
+/******/ });
 //# sourceMappingURL=bundle.js.map
