@@ -49,7 +49,7 @@ Object.defineProperties(_haraBlock.prototype, {
       status: { type: "String" },
       from: { type: "String" },
       to: { type: "String" },
-      flow: {type: "String"},
+      flow: { type: "String" },
       value: { type: "Number" },
       input: { type: "String" }
     }
@@ -61,13 +61,57 @@ export default class HaraBlock {
     this.tblName = TB_HARA_BLOCK;
   }
 
+  _getLastCountTx = async () => {
+    let db = new _haraBlock();
+    db.type = "last_tx_number";
+    db.hash = "*";
+
+    let result = await new Promise((resolve, reject) => {
+      Mapper.get({ item: db })
+        .then(val => {
+          resolve(val.number);
+        })
+        .catch(err => {
+          resolve(false);
+        });
+    });
+
+    return result;
+  };
+
+  _insertLastCountTx = async txCount => {
+    let lastCount = await this._getLastCountTx();
+
+    return new Promise((resolve, reject) => {
+      let db = new _haraBlock();
+      db.type = "last_tx_number";
+      db.hash = "*";
+      db.number = lastCount ? lastCount + txCount : txCount;
+
+      Mapper.put({ item: db })
+        .then(() => {
+          resolve({
+            status: 1,
+            data: db
+          });
+        })
+        .catch(err => {
+          console.warn(err.message);
+          resolve({
+            status: 0,
+            data: db
+          });
+        });
+    });
+  };
+
   _insertLastBlockDetail = blockNumber => {
     return new Promise((resolve, reject) => {
       let db = new _haraBlock();
       db.type = "last_block_number";
       db.hash = "*";
       db.number = blockNumber;
-      0xD51Cef892A6F599b4FFf13D233E5abB99dAd52Bd
+
       Mapper.put({ item: db })
         .then(() => {
           resolve({
@@ -129,20 +173,22 @@ export default class HaraBlock {
           let _item = Object.assign(db, txReceipt);
           _item.type = "transaction";
           _item.hash = _item.transactionHash;
-          
-          let address = typeof _item.logs[0].address !== "undefined" ?  _item.logs[0].address : "";
+
+          let address =
+            _item.logs.length > 0 && "address" in _item.logs[0]
+              ? _item.logs[0].address
+              : "";
 
           // now join txDetail
           _item = Object.assign(_item, txDetail);
           _item.gasPrice = parseInt(_item.gasPrice);
           _item.value = parseInt(_item.value);
           _item.gasLimit = parseInt(gasLimit);
-          if(_item.to == address){
+          if (_item.to == address) {
             _item.flow = "in";
-          }else{
+          } else {
             _item.flow = "out";
           }
-          
 
           if (_item.logs.length == 0) {
             _item.transactionType = "user_to_user";

@@ -23,15 +23,16 @@ export default class PrivateNet {
           const txHashs = blockDetail.transactions;
 
           if (txHashs.length > 0) {
+            let txHashCount = txHashs.length;
+            await new HaraBlock()._insertLastCountTx(txHashCount);
+            
             txHashs.map(async (txHash, key) => {
               let txReceipt = await this.web3.eth.getTransactionReceipt(txHash);
               let txDetail  = await this.web3.eth.getTransaction(txHash);
-              console.log("txReceipt");
-              console.log(txReceipt);
-              console.log("txDetail");
-              console.log(txDetail);
+
               await new HaraBlock()._insertTransaction(txReceipt, txDetail, gasLimit, timeStamp);
             });
+
           }
         } else {
           console.error(error);
