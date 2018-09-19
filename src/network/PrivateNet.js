@@ -11,26 +11,33 @@ export default class PrivateNet {
   _listenNewBlockHeader = async () => {
     this.subscriptionNewBlockHeader = privWeb3.eth
       .subscribe("newBlockHeaders", async (error, result) => {
+        console.log("#=== start ===#")
         if (!error) {
           const blockDetail = await this.web3.eth.getBlock(result.hash);
           const blockNumber = blockDetail.number;
           const gasLimit    = blockDetail.gasLimit;
           const timeStamp   = blockDetail.timestamp;
 
-          await new HaraBlock()._insertLastBlockDetail(blockNumber);
-          await new HaraBlock()._insertBlock(blockDetail, "mined");
+          let lastBlockSavedStatus = await new HaraBlock()._insertLastBlockDetail(blockNumber);
+          console.log(" == lastBlockDetail", lastBlockSavedStatus.message);
+          let blockSavedStatus = await new HaraBlock()._insertBlock(blockDetail, "mined");
+          console.log(" == blockSavedStatus", blockSavedStatus.message);
 
           const txHashs = blockDetail.transactions;
+          console.log("== processing txHashs", txHashs);
 
           if (txHashs.length > 0) {
             let txHashCount = txHashs.length;
-            await new HaraBlock()._insertLastCountTx(txHashCount);
-            
+            let lastTxSavedStatus = await new HaraBlock()._insertLastCountTx(txHashCount);
+            console.log(" == lastCountTx", lastTxSavedStatus.message);
+
             txHashs.map(async (txHash, key) => {
+              console.log(" == begin get tx detail transaction", txHash);
               let txReceipt = await this.web3.eth.getTransactionReceipt(txHash);
               let txDetail  = await this.web3.eth.getTransaction(txHash);
 
-              await new HaraBlock()._insertTransaction(txReceipt, txDetail, gasLimit, timeStamp);
+              let txSavedStatus = await new HaraBlock()._insertTransaction(txReceipt, txDetail, gasLimit, timeStamp);
+              console.log(" == txSavedStatus", txSavedStatus.message);
             });
 
           }
@@ -51,7 +58,8 @@ export default class PrivateNet {
         let checkDB = await modelHaraBlock._getTxData(txHash);
 
         if (checkDB === false) {
-          await modelHaraBlock._insertPendingTransaction(txHash);
+          let statusPending = await modelHaraBlock._insertPendingTransaction(txHash);
+          console.log(" == pending Tx", statusPending.message);
         }
       })
       .on("error", console.error);

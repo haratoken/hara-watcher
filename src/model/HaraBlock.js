@@ -92,14 +92,15 @@ export default class HaraBlock {
         .then(() => {
           resolve({
             status: 1,
-            data: db
+            data: db,
+            message: "Last TxNumber " + db.number + " successfull updated"
           });
         })
         .catch(err => {
-          console.warn(err.message);
           resolve({
             status: 0,
-            data: db
+            data: db,
+            message: "Last TxNumber " + db.number + " successfull updated" + err.message
           });
         });
     });
@@ -116,14 +117,16 @@ export default class HaraBlock {
         .then(() => {
           resolve({
             status: 1,
-            data: db
+            data: db,
+            message: "Last Block " + db.number + " successfull updated"
           });
         })
         .catch(err => {
           console.warn(err.message);
           resolve({
             status: 0,
-            data: db
+            data: db,
+            message: "Last Block " + db.number + " failed updated"
           });
         });
     });
@@ -145,7 +148,14 @@ export default class HaraBlock {
             resolve({
               status: 1,
               data: _item,
-              message: "Item with Hash " + _item.hash + " successfull saved"
+              message:
+                "BlockHash=" +
+                _item.hash +
+                " txCount=" +
+                _item.transactionsCount +
+                " BlockNumber=" +
+                _item.number +
+                " saved"
             });
           })
           .catch(err => {
@@ -153,7 +163,7 @@ export default class HaraBlock {
             resolve({
               status: 0,
               data: _item,
-              message: "Item with Hash " + _item.hash + " failed saved"
+              message: "BlockHash " + _item.hash + " failed saved "+ err.message
             });
           });
       } else {
@@ -209,13 +219,14 @@ export default class HaraBlock {
 
           Mapper.put({ item: _item })
             .then(() => {
-              console.log("success hash" + _item.hash);
               resolve({
                 status: 1,
                 data: _item,
                 message:
-                  "Item with transaction Hash " +
+                  "TXHash=" +
                   _item.hash +
+                  " BlockNumber=" +
+                  _item.number +
                   " successfull saved"
               });
             })
@@ -225,7 +236,7 @@ export default class HaraBlock {
                 status: 0,
                 data: _item,
                 message:
-                  "Item with transaction Hash " + _item.hash + " failed saved"
+                  "Item with transaction Hash " + _item.hash + " failed saved " + err.message
               });
             });
         } catch (error) {
@@ -241,7 +252,18 @@ export default class HaraBlock {
   };
 
   _insertPendingTransaction = txHash => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+      let existStatus = await this._getTxData(txHash);
+
+      if(existStatus) {
+        resolve({
+          status: 1,
+          data: db,
+          message: "Item with transaction Hash " + db.hash + " is not pending"
+        });
+        return;
+      }
+
       let db = new _haraBlock();
       db.type = "transaction";
       db.hash = txHash;

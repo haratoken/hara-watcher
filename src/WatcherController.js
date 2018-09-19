@@ -4,5 +4,5 @@ export const _BlockWatcher = async () => {
   const privNet = await new PrivateNet();
   
   privNet._listenNewBlockHeader();
-  // privNet._listenPendingBlock();
+  privNet._listenPendingBlock();
 };
