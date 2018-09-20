@@ -1,5 +1,6 @@
 import { TB_HARA_BLOCK, InitDB, Mapper } from "../constants/DbConfig";
 import { DynamoDbSchema, DynamoDbTable } from "@aws/dynamodb-data-mapper";
+import { promisify } from "util";
 
 class _haraBlock {}
 Object.defineProperties(_haraBlock.prototype, {
@@ -51,7 +52,8 @@ Object.defineProperties(_haraBlock.prototype, {
       to: { type: "String" },
       flow: { type: "String" },
       value: { type: "Number" },
-      input: { type: "String" }
+      input: { type: "String" },
+      sort_key: { type: "String" }
     }
   }
 });
@@ -59,7 +61,62 @@ Object.defineProperties(_haraBlock.prototype, {
 export default class HaraBlock {
   constructor() {
     this.tblName = TB_HARA_BLOCK;
+
+    this.ddb = InitDB();
+    this.dynamoDBQueryAsync = promisify(this.ddb.query).bind(this.ddb);
   }
+
+  _delPendingTx = async hash => {
+    let db = new _haraBlock();
+    db.type = "transaction_pending";
+    db.hash = hash;
+
+    let result = await new Promise((resolve, reject) => {
+      Mapper.delete({ item: db })
+        .then(val => {
+          resolve(val);
+        })
+        .catch(err => {
+          resolve(false);
+        });
+    });
+
+    return result;
+  };
+
+  _getLastPendingTx = async () => {
+    try {
+      var params = {
+        TableName: this.tblName,
+        IndexName: "type_sortkey",
+        ExpressionAttributeNames: {
+          "#type": "type"
+        },
+        ExpressionAttributeValues: {
+          ":type": "transaction_pending"
+        },
+        KeyConditionExpression: "#type = :type",
+        ScanIndexForward: false,
+        Limit: 1
+      };
+
+      return await this.dynamoDBQueryAsync(params);
+    } catch (error) {
+      console.log("HaraBlock@_getLastPendingTx", error.message);
+      return false;
+    }
+  };
+
+  /**
+   * @param {string} stringISODate
+   * @param {string} hash
+   */
+  _getSortKey = (stringISODate, hash) => {
+    let epoch = new Date(stringISODate).getTime();
+    let slicedHash = hash.substring(0, 6);
+
+    return epoch + "-" + slicedHash;
+  };
 
   _getLastCountTx = async () => {
     let db = new _haraBlock();
@@ -100,7 +157,11 @@ export default class HaraBlock {
           resolve({
             status: 0,
             data: db,
-            message: "Last TxNumber " + db.number + " successfull updated" + err.message
+            message:
+              "Last TxNumber " +
+              db.number +
+              " successfull updated" +
+              err.message
           });
         });
     });
@@ -142,6 +203,7 @@ export default class HaraBlock {
         _item.timestamp = new Date(_item.timestamp * 1000).toISOString();
         _item.transactionsCount = _item.transactions.length;
         _item.transactions = JSON.stringify(_item.transactions);
+        _item.sort_key = this._getSortKey(_item.timestamp, _item.hash);
 
         Mapper.put({ item: _item })
           .then(() => {
@@ -163,7 +225,8 @@ export default class HaraBlock {
             resolve({
               status: 0,
               data: _item,
-              message: "BlockHash " + _item.hash + " failed saved "+ err.message
+              message:
+                "BlockHash " + _item.hash + " failed saved " + err.message
             });
           });
       } else {
@@ -216,6 +279,7 @@ export default class HaraBlock {
             : "*";
           _item.number = _item.blockNumber;
           _item.timestamp = new Date(timeStamp * 1000).toISOString();
+          _item.sort_key = this._getSortKey(_item.timestamp, _item.hash);
 
           Mapper.put({ item: _item })
             .then(() => {
@@ -236,7 +300,10 @@ export default class HaraBlock {
                 status: 0,
                 data: _item,
                 message:
-                  "Item with transaction Hash " + _item.hash + " failed saved " + err.message
+                  "Item with transaction Hash " +
+                  _item.hash +
+                  " failed saved " +
+                  err.message
               });
             });
         } catch (error) {
@@ -255,26 +322,25 @@ export default class HaraBlock {
     return new Promise(async (resolve, reject) => {
       let existStatus = await this._getTxData(txHash);
 
-      if(existStatus) {
+      if (existStatus) {
         resolve({
           status: 1,
-          data: db,
-          message: "Item with transaction Hash " + db.hash + " is not pending"
+          message: "Item with transaction Hash " + txHash + " is not pending"
         });
         return;
       }
 
       let db = new _haraBlock();
-      db.type = "transaction";
+      db.type = "transaction_pending";
       db.hash = txHash;
-      db.status = "pending";
+      db.sort_key = this._getSortKey(new Date(), txHash);
 
       Mapper.put({ item: db })
         .then(() => {
           resolve({
             status: 1,
             data: db,
-            message: "Item with transaction Hash " + db.hash + " is Pending"
+            message: "Item with transaction Hash " + txHash + " is Pending"
           });
         })
         .catch(err => {
