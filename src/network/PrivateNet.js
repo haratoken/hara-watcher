@@ -11,6 +11,9 @@ export default class PrivateNet {
   _makeTxData = async (txHash, gasLimit, timeStamp) => {
     let txReceipt = await this.web3.eth.getTransactionReceipt(txHash);
     let txDetail = await this.web3.eth.getTransaction(txHash);
+    console.log("txDetail input");
+    console.log(txDetail);
+    console.log(txDetail.input.substring(0, 10));
 
     let txSavedStatus = await new HaraBlock()._insertTransaction(
       txReceipt,
