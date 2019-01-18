@@ -11,7 +11,7 @@ const AWSregion = process.env.REGION ? process.env.REGION : "local";
 const AWSendpoint =
   process.env.DB_ENDPOINT !== 'undefined' && process.env.DB_ENDPOINT
     ? process.env.DB_ENDPOINT
-    : "http://192.168.99.100:8000";
+    : "http://localhost:8000";
 
 export const configDB = () => {
   let config = {
